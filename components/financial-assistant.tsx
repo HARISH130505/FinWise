@@ -1,5 +1,4 @@
 "use client";
-
 import type React from "react";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -33,7 +32,7 @@ export function FinancialAssistant() {
   const [typingSpeed, setTypingSpeed] = useState(30); // ms per character
   const [userPoints, setUserPoints] = useState(0);
   const ai = new GoogleGenAI({
-    apiKey: "AIzaSyCi2MQdps1-u5aDFkEnHuVX7XQNiNOjeFI",
+    apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY || "",
   });
 
   useEffect(() => {
