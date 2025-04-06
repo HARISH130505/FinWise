@@ -116,6 +116,19 @@ export default function CryptoPage() {
 
     // In a real app, this would submit the prediction to a backend
   }
+  type Asset = {
+    id: string;
+    type: "nft" | "crypto"; // or whatever types you have
+    volume?: number;
+    floorPrice?: number;
+    marketCap?: number;
+    volume24h?: number;
+  };
+
+  type Prediction = {
+  assetId: string;
+  direction: "up" | "down";
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-teal-50 to-white">
@@ -250,126 +263,145 @@ export default function CryptoPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredAssets.map((asset) => (
-            <motion.div
-              key={asset.id}
-              whileHover={{ y: -5, transition: { duration: 0.2 } }}
-              className="bg-white rounded-3xl overflow-hidden border border-emerald-100 shadow-sm hover:shadow-xl transition-all duration-300"
-            >
-              <div className="h-1 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
-              <div className="p-5">
-                <div className="flex items-center mb-4">
-                  <div className="w-16 h-16 rounded-xl overflow-hidden mr-4">
-                    <img
-                      src={asset.image || "/placeholder.svg"}
-                      alt={asset.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">{asset.name}</h3>
-                    <p className="text-sm text-gray-600">{asset.type === "nft" ? asset.collection : asset.fullName}</p>
-                    <div className="flex items-center mt-1">
-                      <div className="font-medium text-gray-900">{asset.price}</div>
-                      <div className={`ml-2 text-sm ${asset.positive ? "text-green-600" : "text-red-600"}`}>
-                        {asset.change}
-                      </div>
+        {filteredAssets.map((asset) => (
+          <motion.div
+            key={asset.id}
+            whileHover={{ y: -5, transition: { duration: 0.2 } }}
+            className="bg-white rounded-3xl overflow-hidden border border-emerald-100 shadow-sm hover:shadow-xl transition-all duration-300"
+          >
+            {/* Top Gradient Line */}
+            <div className="h-1 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
+
+            {/* Card Content */}
+            <div className="p-5">
+              {/* Header */}
+              <div className="flex items-center mb-4">
+                <div className="w-16 h-16 rounded-xl overflow-hidden mr-4">
+                  <img
+                    src={asset.image || "/placeholder.svg"}
+                    alt={asset.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">{asset.name}</h3>
+                  <p className="text-sm text-gray-600">
+                    {asset.type === "nft" ? asset.collection : asset.fullName}
+                  </p>
+                  <div className="flex items-center mt-1">
+                    <div className="font-medium text-gray-900">
+                      {Number(asset.price).toLocaleString()}
+                    </div>
+                    <div className={`ml-2 text-sm ${asset.positive ? "text-green-600" : "text-red-600"}`}>
+                      {asset.change}
                     </div>
                   </div>
                 </div>
+              </div>
 
-                <p className="text-sm text-gray-600 mb-4">
-                  {asset.description.length > 120 ? asset.description.substring(0, 120) + "..." : asset.description}
-                </p>
+              {/* Description */}
+              <p className="text-sm text-gray-600 mb-4">
+                {asset.description
+                  ? asset.description.length > 120
+                    ? asset.description.substring(0, 120) + "..."
+                    : asset.description
+                  : "No description available."}
+              </p>
 
-                <div className="grid grid-cols-2 gap-2 mb-4">
-                  {asset.type === "nft" ? (
-                    <>
-                      <div className="p-2 bg-emerald-50 rounded-lg">
-                        <div className="text-xs text-gray-500">Volume</div>
-                        <div className="text-sm font-medium text-emerald-900">{(asset as any).volume}</div>
+              {/* Stats */}
+              <div className="grid grid-cols-2 gap-2 mb-4">
+                {asset.type === "nft" ? (
+                  <>
+                    <div className="p-2 bg-emerald-50 rounded-lg">
+                      <div className="text-xs text-gray-500">Volume</div>
+                      <div className="text-sm font-medium text-emerald-900">
+                        {(asset as any).volume?.toLocaleString() || "N/A"}
                       </div>
-                      <div className="p-2 bg-emerald-50 rounded-lg">
-                        <div className="text-xs text-gray-500">Floor Price</div>
-                        <div className="text-sm font-medium text-emerald-900">{(asset as any).floorPrice}</div>
+                    </div>
+                    <div className="p-2 bg-emerald-50 rounded-lg">
+                      <div className="text-xs text-gray-500">Floor Price</div>
+                      <div className="text-sm font-medium text-emerald-900">
+                        {(asset as any).floorPrice?.toLocaleString() || "N/A"}
                       </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="p-2 bg-emerald-50 rounded-lg">
-                        <div className="text-xs text-gray-500">Market Cap</div>
-                        <div className="text-sm font-medium text-emerald-900">{(asset as any).marketCap}</div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="p-2 bg-emerald-50 rounded-lg">
+                      <div className="text-xs text-gray-500">Market Cap</div>
+                      <div className="text-sm font-medium text-emerald-900">
+                        {(asset as any).marketCap?.toLocaleString() || "N/A"}
                       </div>
-                      <div className="p-2 bg-emerald-50 rounded-lg">
-                        <div className="text-xs text-gray-500">24h Volume</div>
-                        <div className="text-sm font-medium text-emerald-900">{(asset as any).volume24h}</div>
+                    </div>
+                    <div className="p-2 bg-emerald-50 rounded-lg">
+                      <div className="text-xs text-gray-500">24h Volume</div>
+                      <div className="text-sm font-medium text-emerald-900">
+                        {(asset as any).volume24h?.toLocaleString() || "N/A"}
                       </div>
-                    </>
-                  )}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Prediction */}
+              <div className="border-t border-emerald-100 pt-4">
+                <p className="text-sm font-medium text-emerald-800 mb-2">Make a 24h prediction:</p>
+                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                  {/* Up Button */}
+                  <button
+                    onClick={() => handlePrediction(asset.id, "up")}
+                    className={`flex-1 py-2 rounded-lg text-sm font-medium ${
+                      prediction?.assetId === asset.id && prediction?.direction === "up"
+                        ? "bg-green-500 text-white"
+                        : "bg-green-100 text-green-700 hover:bg-green-200"
+                    } transition-all duration-200 flex items-center justify-center`}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4 mr-1"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                    </svg>
+                    Going Up
+                  </button>
+
+                  {/* Down Button */}
+                  <button
+                    onClick={() => handlePrediction(asset.id, "down")}
+                    className={`flex-1 py-2 rounded-lg text-sm font-medium ${
+                      prediction?.assetId === asset.id && prediction?.direction === "down"
+                        ? "bg-red-500 text-white"
+                        : "bg-red-100 text-red-700 hover:bg-red-200"
+                    } transition-all duration-200 flex items-center justify-center`}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4 mr-1"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                    </svg>
+                    Going Down
+                  </button>
                 </div>
 
-                <div className="border-t border-emerald-100 pt-4">
-                  <p className="text-sm font-medium text-emerald-800 mb-2">Make a 24h prediction:</p>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => handlePrediction(asset.id, "up")}
-                      className={`flex-1 py-2 rounded-lg text-sm font-medium ${
-                        prediction?.assetId === asset.id && prediction?.direction === "up"
-                          ? "bg-green-500 text-white"
-                          : "bg-green-100 text-green-700 hover:bg-green-200"
-                      } transition-colors duration-200 flex items-center justify-center`}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4 mr-1"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 10l7-7m0 0l7 7m-7-7v18"
-                        />
-                      </svg>
-                      Going Up
-                    </button>
-                    <button
-                      onClick={() => handlePrediction(asset.id, "down")}
-                      className={`flex-1 py-2 rounded-lg text-sm font-medium ${
-                        prediction?.assetId === asset.id && prediction?.direction === "down"
-                          ? "bg-red-500 text-white"
-                          : "bg-red-100 text-red-700 hover:bg-red-200"
-                      } transition-colors duration-200 flex items-center justify-center`}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4 mr-1"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 14l-7 7m0 0l-7-7m7 7V3"
-                        />
-                      </svg>
-                      Going Down
-                    </button>
-                  </div>
-                  <div className="mt-2 text-center text-xs text-emerald-700">
-                    {prediction?.assetId === asset.id
-                      ? "Prediction recorded! +25 points if correct"
-                      : "Earn 25 points for a correct prediction"}
-                  </div>
+                {/* Prediction Feedback */}
+                <div className="mt-2 text-center text-xs text-emerald-700 transition-opacity duration-300">
+                  {prediction?.assetId === asset.id
+                    ? "Prediction recorded! +25 points if correct"
+                    : "Earn 25 points for a correct prediction"}
                 </div>
               </div>
-            </motion.div>
-          ))}
-        </div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
       </main>
     </div>
   )
