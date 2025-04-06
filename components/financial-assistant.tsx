@@ -1,19 +1,20 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState, useRef, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import type React from "react";
+import { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { GoogleGenAI } from "@google/genai";
 
 type Message = {
-  id: string
-  role: "user" | "assistant"
-  content: string
-  points: number
-  badge: string | null
-}
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  points: number;
+  badge: string | null;
+};
 
 export function FinancialAssistant() {
-  const [input, setInput] = useState("")
+  const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome",
@@ -23,39 +24,46 @@ export function FinancialAssistant() {
       points: 0,
       badge: null,
     },
-  ])
-  const [isLoading, setIsLoading] = useState(false)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-  const [isTyping, setIsTyping] = useState(false)
-  const [currentTypingText, setCurrentTypingText] = useState("")
-  const [fullResponse, setFullResponse] = useState("")
-  const [typingSpeed, setTypingSpeed] = useState(30) // ms per character
-  const [userPoints, setUserPoints] = useState(0)
+  ]);
+  const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isTyping, setIsTyping] = useState(false);
+  const [currentTypingText, setCurrentTypingText] = useState("");
+  const [fullResponse, setFullResponse] = useState("");
+  const [typingSpeed, setTypingSpeed] = useState(30); // ms per character
+  const [userPoints, setUserPoints] = useState(0);
+  const ai = new GoogleGenAI({
+    apiKey: "AIzaSyCi2MQdps1-u5aDFkEnHuVX7XQNiNOjeFI",
+  });
 
   useEffect(() => {
     if (isTyping && fullResponse) {
       const timeout = setTimeout(() => {
         if (currentTypingText.length < fullResponse.length) {
-          setCurrentTypingText(fullResponse.substring(0, currentTypingText.length + 1))
+          setCurrentTypingText(
+            fullResponse.substring(0, currentTypingText.length + 1)
+          );
         } else {
-          setIsTyping(false)
+          setIsTyping(false);
           setMessages((prev) =>
             prev.map((msg) =>
-              msg.id === "typing" ? { ...msg, id: Date.now().toString(), content: fullResponse } : msg,
-            ),
-          )
-          setFullResponse("")
-          setCurrentTypingText("")
+              msg.id === "typing"
+                ? { ...msg, id: Date.now().toString(), content: fullResponse }
+                : msg
+            )
+          );
+          setFullResponse("");
+          setCurrentTypingText("");
         }
-      }, typingSpeed)
+      }, typingSpeed);
 
-      return () => clearTimeout(timeout)
+      return () => clearTimeout(timeout);
     }
-  }, [isTyping, currentTypingText, fullResponse, typingSpeed])
+  }, [isTyping, currentTypingText, fullResponse, typingSpeed]);
 
   const handleSend = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (input.trim() === "" || isLoading) return
+    e.preventDefault();
+    if (input.trim() === "" || isLoading) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -63,61 +71,77 @@ export function FinancialAssistant() {
       content: input,
       points: 0,
       badge: null,
-    }
+    };
 
-    setMessages((prev) => [...prev, userMessage])
-    setInput("")
-    setIsLoading(true)
+    setMessages((prev) => [...prev, userMessage]);
+    setInput("");
+    setIsLoading(true);
 
-    setTimeout(() => {
-      const response = generateResponse(input)
-      setFullResponse(response.content)
-      setMessages((prev) => [...prev, { id: "typing", role: "assistant", content: "", points: 0, badge: null }])
-      setIsTyping(true)
-      setCurrentTypingText("")
-      setIsLoading(false)
+    setTimeout(async () => {
+      const response = await ai.models.generateContent({
+        model: "gemini-2.0-flash",
+        contents: `Give in breif: ${input}`,
+      });
+      console.log(response.text);
+      setFullResponse(response.text || "");
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: "typing",
+          role: "assistant",
+          content: "",
+          points: 0,
+          badge: null,
+        },
+      ]);
+      setIsTyping(true);
+      setCurrentTypingText("");
+      setIsLoading(false);
+    }, 500);
+  };
 
-      if (response.points > 0) {
-        setUserPoints((prev) => prev + response.points)
-      }
-    }, 500)
-  }
-
-  const generateResponse = (query: string): { content: string; points: number; badge: string | null } => {
-    const lowerQuery = query.toLowerCase()
-    let points = 0
-    let badge: string | null = null
+  const generateResponse = (
+    query: string
+  ): { content: string; points: number; badge: string | null } => {
+    const lowerQuery = query.toLowerCase();
+    let points = 0;
+    let badge: string | null = null;
 
     if (messages.length === 1) {
-      points = 15
+      points = 15;
     }
 
     if (lowerQuery.includes("nft") || lowerQuery.includes("nfts")) {
-      points = 20
-      badge = "NFT Explorer"
+      points = 20;
+      badge = "NFT Explorer";
       return {
         content:
           "NFTs are unique digital assets verified using blockchain. They are speculative and volatile. Focus on community strength and utility before investing.\n\n+20 points and you've earned the 'NFT Explorer' badge! 🏆",
         points,
         badge,
-      }
-    } else if (lowerQuery.includes("crypto") || lowerQuery.includes("bitcoin") || lowerQuery.includes("ethereum")) {
-      points = 15
+      };
+    } else if (
+      lowerQuery.includes("crypto") ||
+      lowerQuery.includes("bitcoin") ||
+      lowerQuery.includes("ethereum")
+    ) {
+      points = 15;
       return {
         content:
           "Cryptocurrencies operate on decentralized networks. Bitcoin and Ethereum are leading assets. Crypto investments are highly volatile—invest wisely.\n\n+15 points for exploring cryptocurrency concepts!",
         points,
         badge,
-      }
+      };
     } else {
-      points = 5
+      points = 5;
       return {
-        content: "That's a great financial question! Can you share more details about your goals?\n\n+5 points for engaging!",
+        content:
+          "That's a great financial question! Can you share more details about your goals?\n\n+5 points for engaging!",
         points,
         badge,
-      }
+      };
     }
-  }
+  };
 
   return (
     <div className="flex flex-col h-[685px]" id="chatbot">
@@ -126,7 +150,9 @@ export function FinancialAssistant() {
           <div className="w-8 h-8 rounded-full bg-gradient-to-r from-yellow-400 to-orange-400 flex items-center justify-center text-white font-bold">
             💰
           </div>
-          <div className="ml-2 text-sm font-medium text-gray-700">Your Points: {userPoints}</div>
+          <div className="ml-2 text-sm font-medium text-gray-700">
+            Your Points: {userPoints}
+          </div>
         </div>
       </div>
 
@@ -139,7 +165,9 @@ export function FinancialAssistant() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, transition: { duration: 0.2 } }}
               transition={{ duration: 0.3 }}
-              className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+              className={`flex ${
+                message.role === "user" ? "justify-end" : "justify-start"
+              }`}
             >
               <div className="flex items-start max-w-[80%]">
                 <div
@@ -149,7 +177,11 @@ export function FinancialAssistant() {
                       : "bg-white border border-gray-100"
                   }`}
                 >
-                  <div className="whitespace-pre-wrap">{message.id === "typing" ? currentTypingText : message.content}</div>
+                  <div className="whitespace-pre-wrap">
+                    {message.id === "typing"
+                      ? currentTypingText
+                      : message.content}
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -177,5 +209,5 @@ export function FinancialAssistant() {
         </form>
       </div>
     </div>
-  )
+  );
 }
